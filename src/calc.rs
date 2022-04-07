@@ -158,3 +158,15 @@ pub fn trapezoid_edge_interp(trap: &mut Trapezoid, y: f32) {
     trap.left.v.interp(trap.left.v1.clone(), trap.left.v2.clone(), t1);
     trap.right.v.interp(trap.right.v1.clone(), trap.right.v2.clone(), t2);
 }
+
+pub fn trapezoid_init_scan_line(trap: Trapezoid, scanline: &mut Scanline, y: i32) {
+    let width = trap.right.v.pos.x - trap.left.v.pos.x;
+    scanline.x = (trap.left.v.pos.x + 0.5) as i32;
+    scanline.w = (trap.right.v.pos.x + 0.5) as i32 - scanline.x;
+    scanline.y = y;
+    scanline.v = trap.left.v.clone();
+    if trap.left.v.pos.x >= trap.right.v.pos.x {
+        scanline.w = 0;
+    }
+    scanline.step.division(trap.left.v, trap.right.v, width)
+}
