@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 use std::num;
 use crate::vector_calc::Vector4f;
 
+#[derive(Clone, Copy)]
 pub struct Matrix4f {
     pub m: [[f32; 4]; 4],
 }
@@ -117,6 +118,28 @@ impl Matrix4f {
         zaxis.sub(at, eye);
         zaxis.normalize();
         xaxis.crossproduct(up, zaxis);
+        xaxis.normalize();
+        yaxis.crossproduct(zaxis, xaxis);
+
+        self.m[0][0] = xaxis.x;
+        self.m[1][0] = xaxis.y;
+        self.m[2][0] = xaxis.z;
+        self.m[3][0] = -xaxis.dotproduct(eye);
+
+        self.m[0][1] = yaxis.x;
+        self.m[1][1] = yaxis.y;
+        self.m[2][1] = yaxis.z;
+        self.m[3][1] = -yaxis.dotproduct(eye);
+
+        self.m[0][2] = zaxis.x;
+        self.m[1][2] = zaxis.y;
+        self.m[2][2] = zaxis.z;
+        self.m[3][2] = -zaxis.dotproduct(eye);
+
+        self.m[0][3] = 0.0;
+        self.m[1][3] = 0.0;
+        self.m[2][3] = 0.0;
+        self.m[3][3] = 1.0;
     }
 
     pub fn set_perspective(&mut self, eye_fov: f32, aspect_ratio: f32, zNear: f32, zFar: f32) {

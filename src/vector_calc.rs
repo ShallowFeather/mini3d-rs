@@ -3,6 +3,7 @@ use crate::calc;
 use std::num;
 use crate::matrix_calc::Matrix4f;
 
+#[derive(Clone, Copy)]
 pub struct Vector4f {
     pub x: f32,
     pub y: f32,
@@ -30,8 +31,8 @@ impl Vector4f {
         self.z = 1.0;
     }
 
-    pub fn dotproduct(x: Vector4f, y: Vector4f) -> f32 {
-        return x.x * y.x + x.y * y.y + x.z * y.z;
+    pub fn dotproduct(&self, y: Vector4f) -> f32 {
+        return self.x * y.x + self.y * y.y + self.z * y.z;
     }
 
     pub fn crossproduct(&mut self, x: Vector4f, y: Vector4f) {
