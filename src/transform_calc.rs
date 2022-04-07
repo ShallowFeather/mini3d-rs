@@ -2,6 +2,7 @@ use std::f32::consts::PI;
 use crate::matrix_calc::Matrix4f;
 use crate::vector_calc::Vector4f;
 
+#[derive(Clone, Copy)]
 pub struct Transform {
     world: Matrix4f,
     view: Matrix4f,

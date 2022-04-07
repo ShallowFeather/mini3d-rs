@@ -150,3 +150,11 @@ pub fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: Vertex,
     return 2;
 }
 
+pub fn trapezoid_edge_interp(trap: &mut Trapezoid, y: f32) {
+    let s1 = trap.left.v2.pos.y - trap.left.v1.pos.y;
+    let s2 = trap.right.v2.pos.y - trap.right.v1.pos.y;
+    let t1 = (y - trap.left.v1.pos.y) / s1;
+    let t2 = (y - trap.right.v1.pos.y) / s2;
+    trap.left.v.interp(trap.left.v1.clone(), trap.left.v2.clone(), t1);
+    trap.right.v.interp(trap.right.v1.clone(), trap.right.v2.clone(), t2);
+}
