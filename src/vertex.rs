@@ -1,17 +1,8 @@
 use crate::calc::interp;
 use crate::vector_calc::Vector4f;
+use crate::calc::{Texcoord, Color};
 
-pub struct Color {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-}
-
-pub struct Texcoord {
-    pub u: f32,
-    pub v: f32,
-}
-
+#[derive(Clone, Debug)]
 pub struct Vertex {
     pub pos: Vector4f, // Point
     pub tc: Texcoord,
@@ -25,20 +16,7 @@ pub struct Edge {
     pub v2: Vertex,
 }
 
-pub struct Trapezoid {
-    pub top: f32,
-    pub bottom: f32,
-    pub left: Edge,
-    pub right: Edge,
-}
 
-pub struct Scanline {
-    pub v: Vertex,
-    pub step: Vertex,
-    pub x: i32,
-    pub y: i32,
-    pub w: i32,
-}
 
 impl Vertex {
     pub fn rhw_init(&mut self) {
@@ -73,5 +51,18 @@ impl Vertex {
         self.color.g = (x2.color.g - x1.color.g) * inv;
         self.color.b = (x2.color.b - x1.color.b) * inv;
         self.rhw = (x2.rhw - x1.rhw) * inv;
+    }
+
+    pub fn add(&mut self, x: Vertex) {
+        self.pos.x += x.pos.x;
+        self.pos.y += x.pos.y;
+        self.pos.z += x.pos.z;
+        self.pos.w += x.pos.w;
+        self.rhw += x.rhw;
+        self.tc.u += x.tc.u;
+        self.tc.v += x.tc.v;
+        self.color.r += x.color.r;
+        self.color.g += x.color.g;
+        self.color.b += x.color.b;
     }
 }
