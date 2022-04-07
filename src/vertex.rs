@@ -2,7 +2,7 @@ use crate::calc::interp;
 use crate::vector_calc::Vector4f;
 use crate::calc::{Texcoord, Color};
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Vertex {
     pub pos: Vector4f, // Point
     pub tc: Texcoord,
@@ -10,13 +10,12 @@ pub struct Vertex {
     pub rhw: f32,
 }
 
+#[derive(Clone)]
 pub struct Edge {
     pub v: Vertex,
     pub v1: Vertex,
     pub v2: Vertex,
 }
-
-
 
 impl Vertex {
     pub fn rhw_init(&mut self) {

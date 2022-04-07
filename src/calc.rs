@@ -2,6 +2,7 @@ use std::borrow::Borrow;
 use crate::vertex::{Edge, Vertex};
 use crate::vector_calc::Vector4f;
 
+#[derive(Clone)]
 pub struct Trapezoid {
     pub top: f32,
     pub bottom: f32,
@@ -9,6 +10,7 @@ pub struct Trapezoid {
     pub right: Edge,
 }
 
+#[derive(Clone)]
 pub struct Scanline {
     pub v: Vertex,
     pub step: Vertex,
@@ -17,12 +19,14 @@ pub struct Scanline {
     pub w: i32,
 }
 
+#[derive(Clone)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
     pub b: f32,
 }
 
+#[derive(Clone)]
 pub struct Texcoord {
     pub u: f32,
     pub v: f32,
