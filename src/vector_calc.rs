@@ -49,7 +49,7 @@ impl Vector4f {
     }
 
     pub fn normalize(&mut self) {
-        let len = self.vector_length();
+        let len = self.length();
         if len != 0.0 {
             let inv = 1.0 / len;
             self.x *= inv;
