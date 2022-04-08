@@ -12,6 +12,15 @@ pub struct Vector4f {
 }
 
 impl Vector4f {
+    pub fn new() -> Vector4f {
+        Vector4f {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            w: 0.0
+        }
+    }
+
     pub fn length(&self) -> f32 {
         let sq = self.x * self.x + self.y * self.y + self.z * self.z;
         return f32::sqrt(sq);

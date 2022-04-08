@@ -24,14 +24,23 @@ impl Transform {
         self.transform.mul(m, self.projection.clone());
     }
 
-    pub fn init(&mut self, width: i32, height: i32) {
+    pub fn init(width: usize, height: usize) -> Transform {
         let aspect = width as f32 / height as f32;
-        self.world.set_identity();
-        self.view.set_identity();
-        self.projection.set_perspective(PI * 0.5, aspect, 1.0, 500.0);
-        self.w = width as f32;
-        self.h = height as f32;
-        self.update();
+        let mut ret = Transform {
+            world: Matrix4f::new(),
+            view: Matrix4f::new(),
+            projection: Matrix4f::new(),
+            transform: Matrix4f::new(),
+            w: 0.0,
+            h: 0.0
+        };
+        ret.world.set_identity();
+        ret.view.set_identity();
+        ret.projection.set_perspective(PI * 0.5, aspect, 1.0, 500.0);
+        ret.w = width as f32;
+        ret.h = height as f32;
+        ret.update();
+        return ret;
     }
 
     pub fn apply(&self, y: &mut Vector4f, x: Vector4f) {

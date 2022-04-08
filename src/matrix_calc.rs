@@ -8,6 +8,15 @@ pub struct Matrix4f {
 }
 
 impl Matrix4f {
+    pub fn new() -> Matrix4f {
+        Matrix4f {
+            m:  [[0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.],
+                [0., 0., 0., 0.]],
+        }
+    }
+
     pub fn add(&mut self, x: Matrix4f, y: Matrix4f) {
         for i in 0..4 {
             for j in 0..4 {
