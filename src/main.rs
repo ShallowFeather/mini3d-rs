@@ -1,25 +1,24 @@
-use minifb;
-use minifb::Key;
-use crate::device::{Device, RGB};
-use crate::transform_calc::Transform;
-
+mod device;
 mod vector_calc;
+mod transform_calc;
 mod calc;
 mod matrix_calc;
-mod transform_calc;
 mod vertex;
-mod device;
 
+use minifb::{InputCallback, Key, Menu, Scale, Window, WindowOptions};
+use crate::calc::swap;
+use crate::device::Device;
 
+const WIDTH: usize = 500;
+const HEIGHT: usize = 400;
 
 fn main() {
-    let mut window = device::Device::init("owo", 100, 100);
+    let mut device = Device::init("owo", WIDTH, HEIGHT);
+    let mut a = 5 as usize;
+    let mut b = 4 as usize;
 
-    while window.window.is_open() && !window.window.is_key_down(Key::Escape) {
-        let mut buffer: Vec<u32> = vec![0; 100 * 100];
-        window.pixel(0, 1, 0xFF00E436);
-
+    while device.window.is_open() && !device.window.is_key_down(Key::Escape) {
+        //device.draw_line(40,60 , 430, 320, 0xff0c0c);
+        device.window.update_with_buffer(&device.framebuf, WIDTH, HEIGHT).unwrap();
     }
-
-    println!("Hello, world!");
 }

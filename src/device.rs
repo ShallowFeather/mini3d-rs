@@ -1,5 +1,8 @@
+use std::mem::swap;
 use minifb::*;
 use crate::transform_calc::Transform;
+use crate::{HEIGHT, WIDTH};
+use crate::calc::CMID;
 
 pub struct Device {
     pub transform: Transform,
@@ -48,27 +51,20 @@ impl Device {
                 width,
                 height,
                 WindowOptions {
-                    resize: false,
-                    scale: Scale::X32,
+                    scale: minifb::Scale::X2,
                     ..WindowOptions::default()
                 },).unwrap(),
-            framebuf: vec![0; (width * height) as usize],
-            texture: vec![0; (width * height) as usize],
+            framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
+            texture: vec![0; width * height],
             tex_width: 2,
             tex_height: 2,
             max_u: 1.0,
             max_v: 1.0,
             render_state: 0,
-            background: rgb_to_hex(RGB{ R: 30, G: 20, B: 50 }),
+            background: 0b00000000_00000000_00000000_00000000,
             foreground: 0
         };
-        device.texture = vec![0; (width * height) as usize];
-        device.tex_width = 2;
-        device.tex_height = 2;
-        device.max_u = 1.0;
-        device.max_v = 1.0;
-        device.window.set_background_color(255, 20, 50);
-        device.background = rgb_to_hex(RGB{ R: 30, G: 20, B: 50 });
+        device.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         return device;
     }
 
@@ -92,15 +88,103 @@ impl Device {
                 buf[y * width + x] = cc;
             }
         }
-        self.window.update_with_buffer(&buf, width, height).unwrap();
         self.framebuf = buf;
     }
 
-    pub fn pixel(&mut self, x: i32, y: i32, color: u32) {
-        let (width, height) = self.window.get_size();
-        for i in 0..self.framebuf.len() {
-            self.framebuf[i] = color;
+    pub fn pixel(&mut self, x: usize, y: usize, color: u32) {
+        self.framebuf[y * WIDTH + x] = color;
+    }
+
+    pub fn draw_line(&mut self, mut x1: usize, mut y1: usize, mut x2: usize, mut y2: usize, color: u32) {
+        if x1 == x2 && y1 == y2 {
+            self.pixel(x1, y1, color);
+        } else if x1 == x2 {
+            let inc = match y1 < y2 {
+                true => { 1 }
+                false => { -1 }
+            };
+            let mut y = y1 as i32;
+            while y as usize != y2 {
+                self.pixel(x1, y as usize, color);
+                y += inc;
+            }
+            self.pixel(x2, y2, color);
+        } else if y1 == y2 {
+            let inc = match x1 <= x2 {
+                true => { 1 }
+                false => { -1 }
+            };
+            let mut x= x1 as i32;
+            while x as usize != x2 {
+                self.pixel(x as usize, y1, color);
+                x += inc;
+            }
+            self.pixel(x2, y2, color);
+        } else {
+            let dx = match x1 < x2 {
+                true => { x2 - x1 }
+                false => { x1 - x2 }
+            };
+            let dy = match y1 < y2 {
+                true => { y2 - y1 }
+                false => { y1 - y2 }
+            };
+            if dx >= dy {
+                if x2 < x1 {
+                    swap(&mut x1, &mut x2);
+                    swap(&mut y1, &mut y2);
+                }
+                let mut x = x1 as i32;
+                let mut y = y1 as i32;
+                let mut rem = 0;
+                while x <= x2 as i32{
+                    self.pixel(x as usize, y as usize, color);
+                    rem += dy;
+                    if rem >= dx {
+                        rem -= dx;
+                        y += match y2 >= y1 {
+                            true => { 1 }
+                            false => { -1 }
+                        };
+                        self.pixel(x as usize, y as usize, color);
+                    }
+                    x += 1;
+                }
+                self.pixel(x2, y2, color);
+            } else {
+                if y2 < y1 {
+                    swap(&mut x1, &mut x2);
+                    swap(&mut y1, &mut y2);
+                }
+                let mut x = x1 as i32;
+                let mut y = y1 as i32;
+                let mut rem = 0;
+                while y <= y2 as i32 {
+                    self.pixel(x as usize, y as usize, color);
+                    rem += dx;
+                    if rem >= dy {
+                        rem -= dy;
+                        x += match x2 >= x1 {
+                            true => { 1 }
+                            false => { -1 }
+                        };
+                        self.pixel(x as usize, y as usize, color)
+                    }
+                }
+                self.pixel(x2, y2, color);
+            }
         }
-        self.window.update_with_buffer(&self.framebuf, width, height).unwrap();
+    }
+
+    pub fn texture_read(self, mut u: f32, mut v: f32) -> u32 {
+        let mut x;
+        let mut y;
+        u *= self.max_u;
+        v *= self.max_v;
+        x = (u + 0.5) as i32;
+        y = (v + 0.5) as i32;
+        x = CMID(x, 0, self.tex_width - 1);
+        y = CMID(y, 0, self.tex_height - 1);
+        return self.texture[(y * self.tex_width + x) as usize];
     }
 }

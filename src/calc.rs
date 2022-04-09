@@ -174,3 +174,13 @@ pub fn trapezoid_init_scan_line(trap: Trapezoid, scanline: &mut Scanline, y: i32
     }
     scanline.step.division(trap.left.v, trap.right.v, width)
 }
+
+pub fn map(val: f64, start1: f64, end1: f64, start2: f64, end2: f64) -> f64 {
+    start2 + (end2 - start2) * ((val - start1) / (end1 - start1))
+}
+
+pub fn swap<'a>(x1: &'a mut usize, x2: &'a mut usize) {
+    let x = *x1;
+    *x1 = *x2;
+    *x2 = x;
+}
