@@ -2,16 +2,17 @@ use std::mem::swap;
 use minifb::*;
 use crate::transform_calc::Transform;
 use crate::{HEIGHT, WIDTH};
-use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init_triangle};
+use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init, trapezoid_init_triangle};
+use crate::matrix_calc::Matrix4f;
 use crate::vector_calc::Vector4f;
-use crate::vertex::Vertex;
+use crate::vertex::{Edge, Vertex};
 
 pub struct Device {
     pub transform: Transform,
     pub window: minifb::Window, // get_size = (width, height)
     pub framebuf: Vec<u32>,
     pub texture: Vec<u32>,
-    pub zbuffer: Vec<u32>,
+    pub zbuffer: Vec<Vec<u32>>,
     pub tex_width: i32,
     pub tex_height: i32,
     pub max_u: f32,
@@ -60,7 +61,7 @@ impl Device {
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
             texture: vec![0; width * height],
-            zbuffer: vec![0; width * height],
+            zbuffer: vec![vec![0; height]; width],
             tex_width: 2,
             tex_height: 2,
             max_u: 1.0,
@@ -223,7 +224,7 @@ impl Device {
         }
     }
 
-    pub fn texture_read(self, mut u: f32, mut v: f32) -> u32 {
+    pub fn texture_read(&self, mut u: f32, mut v: f32) -> u32 {
         let mut x;
         let mut y;
         u *= self.max_u;
@@ -238,14 +239,13 @@ impl Device {
     pub fn draw_scanline(&mut self, mut scanline: Scanline) {
         let x = scanline.x;
         let w = scanline.w;
-        let mut zbuffer = *self.zbuffer[scanline.y];
         for w in w..0 {
             if x >= 0 && x < WIDTH as i32 {
                 let rhw = scanline.v.rhw;
-                if rhw >= zbuffer[x as usize] as f32 {
+                if rhw >= self.zbuffer[scanline.y as usize][x as usize] as f32 {
                     let w = 1.0 / rhw;
-                    zbuffer[x] = rhw;
-                    if self.render_state & RENDER_STATE_COLOR {
+                    self.zbuffer[scanline.y as usize][x as usize] = rhw as u32;
+                    if self.render_state & RENDER_STATE_COLOR == 1 {
                         let mut rgb = RGB {
                             R: scanline.v.color.r as u32,
                             G: scanline.v.color.g as u32,
@@ -254,12 +254,12 @@ impl Device {
                         rgb.R = CMID(rgb.R as i32, 0, 255) as u32;
                         rgb.G = CMID(rgb.G as i32, 0, 255) as u32;
                         rgb.B = CMID(rgb.B as i32, 0, 255) as u32;
-                        self.framebuf[x] = rgb_to_hex(rgb);
+                        self.framebuf[(scanline.y as usize * WIDTH + x as usize) as usize] = rgb_to_hex(rgb);
                     }
-                    if self.render_state & RENDER_STATE_TEXTURE {
+                    if self.render_state & RENDER_STATE_TEXTURE == 1 {
                         let u = scanline.v.tc.u * w;
                         let v = scanline.v.tc.v * w;
-                        self.framebuf[x] = self.texture_read(u, v);
+                        self.framebuf[(scanline.y as usize * WIDTH + x as usize) as usize] = self.texture_read(u, v);
                     }
                 }
             }
@@ -276,7 +276,7 @@ impl Device {
         let bottom = (trap.bottom + 0.5) as i32;
         for j in top..bottom {
             if j >= 0 && j < HEIGHT as i32 {
-                trapezoid_edge_interp(trap, (j + 0.5) as f32);
+                trapezoid_edge_interp(trap, (j as f32 + 0.5) as f32);
             }
             if j >= HEIGHT as i32 {
                 break;
@@ -310,11 +310,11 @@ impl Device {
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
 
-        if render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR) {
+        if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 1 {
             let mut t1 = v1;
             let mut t2 = v2;
             let mut t3 = v3;
-            let traps: &mut [Trapezoid; 2] = &mut [];
+            let traps: &mut [Trapezoid; 2] = &mut [trapezoid_init(); 2];
             t1.pos = p1;
             t2.pos = p2;
             t3.pos = p3;
@@ -335,7 +335,7 @@ impl Device {
             }
         }
 
-        if render_state & RENDER_STATE_WIREFRAME {
+        if render_state & RENDER_STATE_WIREFRAME == 1 {
             self.draw_line(p1.x as usize, p1.y as usize,
                            p2.x as usize, p2.y as usize, self.foreground);
             self.draw_line(p1.x as usize, p1.y as usize,
@@ -346,6 +346,75 @@ impl Device {
     }
 
     pub fn draw_plane(&mut self, a: i32, b: i32, c: i32, d: i32) {
-        let p1 =
+        //let mut p1 = self.mesh[a as usize];
+        //let mut p2 = self.mesh[b as usize];
+        //let mut p3 = self.mesh[c as usize];
+        //let mut p4 = self.mesh[d as usize];
+        self.mesh[a as usize].tc.u = 0 as f32;
+        self.mesh[a as usize].tc.v = 0 as f32;
+        self.mesh[b as usize].tc.u = 0 as f32;
+        self.mesh[b as usize].tc.v = 1 as f32;
+        self.mesh[c as usize].tc.u = 1 as f32;
+        self.mesh[c as usize].tc.v = 1 as f32;
+        self.mesh[d as usize].tc.u = 1 as f32;
+        self.mesh[d as usize].tc.v = 0 as f32;
+        self.draw_primitive(self.mesh[a as usize],
+                            self.mesh[b as usize],
+                            self.mesh[c as usize],
+        );
+        self.draw_primitive(self.mesh[c as usize],
+                            self.mesh[d as usize],
+                            self.mesh[a as usize],
+        );
+    }
+
+    pub fn draw_box(&mut self, theta: f32) {
+        let mut m = Matrix4f::new();
+        m.set_rotation(-1., -0.5, 1., theta);
+        self.transform.world = m;
+        self.transform.update();
+        self.draw_plane(0, 1, 2, 3);
+        self.draw_plane(7, 6, 5, 4);
+        self.draw_plane(0, 4, 5, 1);
+        self.draw_plane(1, 5, 6, 2);
+        self.draw_plane(2, 6, 7, 3);
+        self.draw_plane(3, 7, 4, 0);
+    }
+
+    pub fn camera_at_zero(&mut self, x: f32, y: f32, z: f32) {
+        let eye = Vector4f {
+            x,
+            y,
+            z,
+            w: 1.0
+        };
+        let at = Vector4f {
+            x: 0.,
+            y: 0.,
+            z: 0.,
+            w: 1.,
+        };
+        let up = Vector4f {
+            x: 0.,
+            y: 0.,
+            z: 1.,
+            w: 1.,
+        };
+        self.transform.view.set_lookat(eye, at, up);
+        self.transform.update();
+    }
+
+    pub fn init_texture(&mut self) {
+        for j in 0..256 {
+            for i in 0..256 {
+                let x = i / 32;
+                let y = j / 32;
+                self.texture[j * 256 + y] = match ((x + y) & 1) {
+                    1 => { 0xffffff }
+                    _ => { 0x3fbcef }
+                };
+            }
+        }
+        self.set_texture(256 * 4, 256 * 4);
     }
 }

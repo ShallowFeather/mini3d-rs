@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use crate::vertex::{Edge, Vertex};
 use crate::vector_calc::Vector4f;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Trapezoid {
     pub top: f32,
     pub bottom: f32,
@@ -10,7 +10,7 @@ pub struct Trapezoid {
     pub right: Edge,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Scanline {
     pub v: Vertex,
     pub step: Vertex,
@@ -19,14 +19,14 @@ pub struct Scanline {
     pub w: i32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
     pub b: f32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Texcoord {
     pub u: f32,
     pub v: f32,
@@ -48,6 +48,53 @@ pub fn CMID(x: i32, min: i32, max: i32) -> i32{
 
 pub fn interp(x1: f32, x2: f32, t: f32) -> f32 {
     return x1 + (x2 - x1) * t;
+}
+
+pub fn trapezoid_init() -> Trapezoid {
+    Trapezoid {
+        top: 0.0,
+        bottom: 0.0,
+        left: Edge {
+            v: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+            v1: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+            v2: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+        },
+        right: Edge {
+            v: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+            v1: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+            v2: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+        }
+    }
 }
 
 pub fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: Vertex,

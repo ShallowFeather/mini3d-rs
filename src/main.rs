@@ -20,6 +20,7 @@ fn main() {
 
     while device.window.is_open() && !device.window.is_key_down(Key::Escape) {
         device.draw_line(40,60 , 430, 320, 0xff0c0c);
+
         device.window.update_with_buffer(&device.framebuf, WIDTH, HEIGHT).unwrap();
     }
 }

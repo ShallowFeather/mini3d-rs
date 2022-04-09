@@ -4,12 +4,12 @@ use crate::vector_calc::Vector4f;
 
 #[derive(Clone, Copy)]
 pub struct Transform {
-    world: Matrix4f,
-    view: Matrix4f,
-    projection: Matrix4f,
-    transform: Matrix4f,
-    w: f32,
-    h: f32,
+    pub world: Matrix4f,
+    pub view: Matrix4f,
+    pub projection: Matrix4f,
+    pub transform: Matrix4f,
+    pub w: f32,
+    pub h: f32,
 }
 
 impl Transform {
