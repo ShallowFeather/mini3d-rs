@@ -2,13 +2,16 @@ use std::mem::swap;
 use minifb::*;
 use crate::transform_calc::Transform;
 use crate::{HEIGHT, WIDTH};
-use crate::calc::CMID;
+use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init_triangle};
+use crate::vector_calc::Vector4f;
+use crate::vertex::Vertex;
 
 pub struct Device {
     pub transform: Transform,
     pub window: minifb::Window, // get_size = (width, height)
     pub framebuf: Vec<u32>,
     pub texture: Vec<u32>,
+    pub zbuffer: Vec<u32>,
     pub tex_width: i32,
     pub tex_height: i32,
     pub max_u: f32,
@@ -16,6 +19,7 @@ pub struct Device {
     pub render_state: i32,
     pub background: u32,
     pub foreground: u32,
+    pub mesh: Vec<Vertex>
 }
 
 const RENDER_STATE_WIREFRAME: i32 = 1;
@@ -56,13 +60,56 @@ impl Device {
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
             texture: vec![0; width * height],
+            zbuffer: vec![0; width * height],
             tex_width: 2,
             tex_height: 2,
             max_u: 1.0,
             max_v: 1.0,
             render_state: 0,
             background: 0b00000000_00000000_00000000_00000000,
-            foreground: 0
+            foreground: 0,
+            mesh: vec![
+                Vertex {
+                    pos: Vector4f { x: -1.0, y: -1.0, z: 1.0, w: 1.0 },
+                    tc: Texcoord { u: 0.0, v: 0.0 },
+                    color: Color { r: 1.0, g: 0.2, b: 0.2 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: 1.0, y: -1.0, z: 1.0, w: 1.0 },
+                    tc: Texcoord { u: 0.0, v: 1.0 },
+                    color: Color { r: 0.2, g: 1.0, b: 0.2 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: 1.0, y: 1.0, z: 1.0, w: 1.0 },
+                    tc: Texcoord { u: 1.0, v: 1.0 },
+                    color: Color { r: 0.2, g: 0.2, b: 1.0 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: -1.0, y: 1.0, z: 1.0, w: 1.0 },
+                    tc: Texcoord { u: 1.0, v: 0.0 },
+                    color: Color { r: 1.0, g: 0.2, b: 1.0 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: -1.0, y: -1.0, z: -1.0, w: 1.0 },
+                    tc: Texcoord { u: 0.0, v: 0.0 },
+                    color: Color { r: 1.0, g: 1.0, b: 0.2 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: 1.0, y: -1.0, z: -1.0, w: 1.0 },
+                    tc: Texcoord { u: 0.0, v: 1.0 },
+                    color: Color { r: 0.2, g: 1.0, b: 1.0 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: 1.0, y: 1.0, z: -1.0, w: 1.0 },
+                    tc: Texcoord { u: 1.0, v: 1.0 },
+                    color: Color { r: 1.0, g: 0.3, b: 0.3 }, rhw: 1.0
+                },
+                Vertex {
+                    pos: Vector4f { x: -1.0, y: 1.0, z: -1.0, w: 1.0 },
+                    tc: Texcoord { u: 1.0, v: 0.0 },
+                    color: Color { r: 0.2, g: 1.0, b: 0.3 }, rhw: 1.0
+                },
+            ]
         };
         device.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         return device;
@@ -186,5 +233,119 @@ impl Device {
         x = CMID(x, 0, self.tex_width - 1);
         y = CMID(y, 0, self.tex_height - 1);
         return self.texture[(y * self.tex_width + x) as usize];
+    }
+    //渲染部分
+    pub fn draw_scanline(&mut self, mut scanline: Scanline) {
+        let x = scanline.x;
+        let w = scanline.w;
+        let mut zbuffer = *self.zbuffer[scanline.y];
+        for w in w..0 {
+            if x >= 0 && x < WIDTH as i32 {
+                let rhw = scanline.v.rhw;
+                if rhw >= zbuffer[x as usize] as f32 {
+                    let w = 1.0 / rhw;
+                    zbuffer[x] = rhw;
+                    if self.render_state & RENDER_STATE_COLOR {
+                        let mut rgb = RGB {
+                            R: scanline.v.color.r as u32,
+                            G: scanline.v.color.g as u32,
+                            B: scanline.v.color.b as u32,
+                        };
+                        rgb.R = CMID(rgb.R as i32, 0, 255) as u32;
+                        rgb.G = CMID(rgb.G as i32, 0, 255) as u32;
+                        rgb.B = CMID(rgb.B as i32, 0, 255) as u32;
+                        self.framebuf[x] = rgb_to_hex(rgb);
+                    }
+                    if self.render_state & RENDER_STATE_TEXTURE {
+                        let u = scanline.v.tc.u * w;
+                        let v = scanline.v.tc.v * w;
+                        self.framebuf[x] = self.texture_read(u, v);
+                    }
+                }
+            }
+            scanline.v.add(scanline.step.clone());
+            if x >= WIDTH as i32 {
+                break;
+            }
+        }
+    }
+
+    pub fn render_trap(&mut self, trap: &mut Trapezoid) {
+        let mut scanline: Scanline;
+        let top = (trap.top + 0.5) as i32;
+        let bottom = (trap.bottom + 0.5) as i32;
+        for j in top..bottom {
+            if j >= 0 && j < HEIGHT as i32 {
+                trapezoid_edge_interp(trap, (j + 0.5) as f32);
+            }
+            if j >= HEIGHT as i32 {
+                break;
+            }
+        }
+    }
+
+    pub fn draw_primitive(&mut self, v1: Vertex, v2: Vertex, v3: Vertex) {
+        let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let render_state = self.render_state;
+        self.transform.apply(&mut c1, v1.pos);
+        self.transform.apply(&mut c2, v2.pos);
+        self.transform.apply(&mut c3, v3.pos);
+
+        if Transform::check_cvv(c1) != 0 {
+            return;
+        }
+        if Transform::check_cvv(c2) != 0 {
+            return;
+        }
+        if Transform::check_cvv(c3) != 0 {
+            return;
+        }
+
+        self.transform.homogenize(&mut p1, c1);
+        self.transform.homogenize(&mut p2, c2);
+        self.transform.homogenize(&mut p3, c3);
+
+        if render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR) {
+            let mut t1 = v1;
+            let mut t2 = v2;
+            let mut t3 = v3;
+            let traps: &mut [Trapezoid; 2] = &mut [];
+            t1.pos = p1;
+            t2.pos = p2;
+            t3.pos = p3;
+            t1.pos.w = c1.w;
+            t2.pos.w = c2.w;
+            t3.pos.w = c3.w;
+
+            t1.rhw_init();
+            t2.rhw_init();
+            t3.rhw_init();
+
+            let n = trapezoid_init_triangle(traps, t1, t2, t3);
+            if n >= 1 {
+                self.render_trap(&mut traps[0]);
+            }
+            if n >= 2 {
+                self.render_trap(&mut traps[1]);
+            }
+        }
+
+        if render_state & RENDER_STATE_WIREFRAME {
+            self.draw_line(p1.x as usize, p1.y as usize,
+                           p2.x as usize, p2.y as usize, self.foreground);
+            self.draw_line(p1.x as usize, p1.y as usize,
+                           p3.x as usize, p3.y as usize, self.foreground);
+            self.draw_line(p3.x as usize, p3.y as usize,
+                           p2.x as usize, p2.y as usize, self.foreground);
+        }
+    }
+
+    pub fn draw_plane(&mut self, a: i32, b: i32, c: i32, d: i32) {
+        let p1 =
     }
 }
