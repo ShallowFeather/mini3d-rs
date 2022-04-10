@@ -5,6 +5,8 @@ mod calc;
 mod matrix_calc;
 mod vertex;
 
+use std::thread::sleep;
+use std::time::Duration;
 use minifb::{InputCallback, Key, Menu, Scale, Window, WindowOptions};
 use crate::calc::swap;
 use crate::device::Device;
@@ -20,11 +22,10 @@ fn main() {
     device.camera_at_zero(3., 0., 0.);
     device.init_texture();
     device.render_state = RENDER_STATE_TEXTURE;
+    let mut a = 0;
     while device.window.is_open() && !device.window.is_key_down(Key::Escape) {
         device.clear(1);
         device.camera_at_zero(3.5, 0., 0.);
-        //device.draw_box(1.);
-        //device.draw_line(40,60, 430, 320, 0xFF);
         device.draw_box(1.);
         device.window.update_with_buffer(&device.framebuf, WIDTH, HEIGHT).unwrap();
     }

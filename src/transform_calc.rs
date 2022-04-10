@@ -1,6 +1,7 @@
 use std::f32::consts::PI;
 use crate::matrix_calc::Matrix4f;
 use crate::vector_calc::Vector4f;
+use crate::{HEIGHT, WIDTH};
 
 #[derive(Clone, Copy)]
 pub struct Transform {
@@ -20,26 +21,27 @@ impl Transform {
                 [0., 0., 0., 0.],
                 [0., 0., 0., 0.]]
         };
-        m.mul(self.world.clone(), self.view.clone());
-        self.transform.mul(m, self.projection.clone());
+        m.mul(self.world, self.view);
+        self.transform.mul(m, self.projection);
     }
 
-    pub fn init(width: usize, height: usize) -> Transform {
-        let aspect = width as f32 / height as f32;
+    pub fn init() -> Transform {
+        let aspect = WIDTH as f32 / HEIGHT as f32;
         let mut ret = Transform {
             world: Matrix4f::new(),
             view: Matrix4f::new(),
             projection: Matrix4f::new(),
             transform: Matrix4f::new(),
-            w: 0.0,
-            h: 0.0
-        };
+            w: WIDTH as f32,
+            h: HEIGHT as f32,
+       };
         ret.world.set_identity();
         ret.view.set_identity();
-        ret.projection.set_perspective(PI * 0.5, aspect, 1.0, 500.0);
-        ret.w = width as f32;
-        ret.h = height as f32;
+        //println!("{} {} {} {}", ret.view.m[0][3], ret.view.m[1][3], ret.view.m[2][3], ret.view.m[3][3]);
+        ret.projection.set_perspective(3.1415926 * 0.5, aspect, 1.0, 500.0);
+        //println!("{} {} {} {}", ret.projection.m[0][3], ret.projection.m[1][3], ret.projection.m[2][3], ret.projection.m[3][3]);
         ret.update();
+        //println!("{} {} {} {}", ret.transform.m[0][3], ret.transform.m[1][3], ret.transform.m[2][3], ret.transform.m[3][3]);
         return ret;
     }
 
@@ -68,7 +70,6 @@ impl Transform {
         if v.y > w {
             check |= 32;
         }
-        println!("{}", check);
         return check;
     }
 
@@ -78,5 +79,6 @@ impl Transform {
         y.y = (1.0 - x.y * rhw) * self.h * 0.5;
         y.z = x.z * rhw;
         y.w = 1.0;
+        //println!("{} {} {} {}", y.x, y.y, y.z, y.w);
     }
 }

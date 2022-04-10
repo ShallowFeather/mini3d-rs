@@ -1,4 +1,5 @@
 use std::mem::swap;
+use libc::exit;
 use minifb::*;
 use crate::transform_calc::Transform;
 use crate::{HEIGHT, WIDTH};
@@ -50,7 +51,7 @@ pub fn rgb_to_hex(rgb: RGB) -> u32 {
 impl Device {
     pub fn init(name: &str, width: usize, height: usize) -> Device {
         let mut device : Device = Device {
-            transform: Transform::init(width, height),
+            transform: Transform::init(),
             window: minifb::Window::new(
                 name,
                 width,
@@ -141,6 +142,7 @@ impl Device {
     pub fn pixel(&mut self, x: usize, y: usize, color: u32) {
         self.framebuf[y * WIDTH + x] = color;
     }
+
 
     pub fn draw_line(&mut self, mut x1: usize, mut y1: usize, mut x2: usize, mut y2: usize, color: u32) {
         if x1 == x2 && y1 == y2 {
@@ -291,31 +293,22 @@ impl Device {
         let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let render_state = self.render_state;
-        c1.matrix_apply(v1.pos, self.transform.transform);
-        c2.matrix_apply(v2.pos, self.transform.transform);
-        c3.matrix_apply(v3.pos, self.transform.transform);
-        // self.transform.apply(&mut c1, v1.pos);
-        // self.transform.apply(&mut c2, v2.pos);
-        // self.transform.apply(&mut c3, v3.pos);
-        //println!("{}", c1.x);
+        self.transform.apply(&mut c1, v1.pos);
+        self.transform.apply(&mut c2, v2.pos);
+        self.transform.apply(&mut c3, v3.pos);
         if Transform::check_cvv(c1) != 0 {
             return;
         }
-        println!("owo");
         if Transform::check_cvv(c2) != 0 {
             return;
         }
-        println!("owo");
         if Transform::check_cvv(c3) != 0 {
             return;
         }
-        println!("owo");
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
-
         if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 1 {
-            //println!("owo");
             let mut t1 = v1;
             let mut t2 = v2;
             let mut t3 = v3;
@@ -339,8 +332,7 @@ impl Device {
                 self.render_trap(&mut traps[1]);
             }
         }
-        //println!("{}", render_state);
-        if render_state & RENDER_STATE_WIREFRAME == 2 {
+        if render_state & RENDER_STATE_WIREFRAME == 1 {
             println!("owo");
             self.draw_line(p1.x as usize, p1.y as usize,
                            p2.x as usize, p2.y as usize, 0xff0c0c);

@@ -42,9 +42,10 @@ impl Matrix4f {
         };
         for i in 0..4 {
             for j in 0..4 {
-                for k in 0..4 {
-                    z.m[i][j] += x.m[i][k] * y.m[k][j];
-                }
+                z.m[j][i] = (x.m[j][0] * y.m[0][i])
+                    + (x.m[j][1] * y.m[1][i])
+                    + (x.m[j][2] * y.m[2][i])
+                    + (x.m[j][3] * y.m[3][i]);
             }
         }
         self.m = z.m;
@@ -59,15 +60,11 @@ impl Matrix4f {
     }
 
     pub fn set_identity(&mut self) {
-        for i in 0..4 {
-            for j in 0..4 {
-                self.m[i][j] = 0.0;
-            }
-        }
-        self.m[0][0] = 1.0;
-        self.m[1][1] = 1.0;
-        self.m[2][2] = 1.0;
-        self.m[3][3] = 1.0;
+        self.m[0][0] = 1.; self.m[1][1] = 1.; self.m[2][2] = 1.; self.m[3][3] = 1.;
+        self.m[0][1] = 0.; self.m[0][2] = 0.; self.m[0][3] = 0.;
+        self.m[1][0] = 0.; self.m[1][2] = 0.; self.m[1][3] = 0.;
+        self.m[2][0] = 0.; self.m[2][1] = 0.; self.m[2][3] = 0.;
+        self.m[3][0] = 0.; self.m[3][1] = 0.; self.m[3][2] = 0.;
     }
 
     pub fn set_zero(&mut self) {
@@ -95,8 +92,9 @@ impl Matrix4f {
     pub fn set_rotation(&mut self, mut x: f32, mut y: f32, mut z: f32, dolta: f32) {
         let qsin = (dolta * 0.5).sin();
         let qcos = (dolta * 0.5).cos();
-        let vec = Vector4f{ x, y, z, w: 1.0 };
+        let mut vec = Vector4f{ x, y, z, w: 1.0 };
         let w = qcos;
+        vec.normalize();
         x = vec.x * qsin;
         y = vec.y * qsin;
         z = vec.z * qsin;
@@ -115,7 +113,7 @@ impl Matrix4f {
         self.m[3][0] = 0.0;;
         self.m[3][1] = 0.0;
         self.m[3][2] = 0.0;
-        self.m[3][3] = 0.0;
+        self.m[3][3] = 1.0;
     }
 
     //Camera
@@ -156,8 +154,8 @@ impl Matrix4f {
         self.set_zero();
         self.m[0][0] = (fax / aspect_ratio);
         self.m[1][1] = fax;
-        self.m[2][2] = zFar;
+        self.m[2][2] = zFar / (zFar - zNear);
         self.m[3][2] = -zNear * zFar / (zFar - zNear);
-        self.m[3][3] = 1.0;
+        self.m[2][3] = 1.0;
     }
 }
