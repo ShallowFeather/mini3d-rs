@@ -7,9 +7,8 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="still no print box QQ">
+    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="else bug QQ">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/calc.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/device.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/device.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -92,7 +91,14 @@
       <option name="project" value="LOCAL" />
       <updated>1649618129289</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="else bug QQ">
+      <created>1649621124827</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1649621124827</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -116,6 +122,7 @@
     <MESSAGE value="last thing is main fn" />
     <MESSAGE value="IDK where is wrong QQ" />
     <MESSAGE value="still no print box QQ" />
-    <option name="LAST_COMMIT_MESSAGE" value="still no print box QQ" />
+    <MESSAGE value="else bug QQ" />
+    <option name="LAST_COMMIT_MESSAGE" value="else bug QQ" />
   </component>
 </project>

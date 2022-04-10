@@ -61,7 +61,7 @@ impl Device {
                     ..WindowOptions::default()
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
-            texture: vec![vec![0, 256]; 256],
+            texture: vec![vec![0; 256]; 256],
             zbuffer: vec![vec![0; height]; width],
             tex_width: 2,
             tex_height: 2,
@@ -239,12 +239,11 @@ impl Device {
     //渲染部分
     pub fn draw_scanline(&mut self, mut scanline: Scanline) {
         let mut x = scanline.x;
-
         let render_state = self.render_state;
         let y = scanline.y as usize;
         let mut w = scanline.w;
         while w > 0 && x < WIDTH as i32 {
-            if x >= 0 && x < WIDTH as i32 {
+            if x >= 0 && x < HEIGHT as i32 {
                 let rhw = scanline.v.rhw;
                 let w = 1. / rhw;
                 if rhw >= self.zbuffer[y as usize][x as usize] as f32 {
