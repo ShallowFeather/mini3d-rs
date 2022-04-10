@@ -110,7 +110,7 @@ impl Matrix4f {
         self.m[0][3] = 0.0;
         self.m[1][3] = 0.0;
         self.m[2][3] = 0.0;
-        self.m[3][0] = 0.0;;
+        self.m[3][0] = 0.0;
         self.m[3][1] = 0.0;
         self.m[3][2] = 0.0;
         self.m[3][3] = 1.0;

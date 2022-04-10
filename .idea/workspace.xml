@@ -7,9 +7,13 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="else bug QQ">
+    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="finilly has some image but still strange">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/calc.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/device.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/device.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/matrix_calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/matrix_calc.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/vector_calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/vector_calc.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -98,7 +102,14 @@
       <option name="project" value="LOCAL" />
       <updated>1649621124827</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="finilly has some image but still strange">
+      <created>1649622109761</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1649622109761</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -123,6 +134,7 @@
     <MESSAGE value="IDK where is wrong QQ" />
     <MESSAGE value="still no print box QQ" />
     <MESSAGE value="else bug QQ" />
-    <option name="LAST_COMMIT_MESSAGE" value="else bug QQ" />
+    <MESSAGE value="finilly has some image but still strange" />
+    <option name="LAST_COMMIT_MESSAGE" value="finilly has some image but still strange" />
   </component>
 </project>

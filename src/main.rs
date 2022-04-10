@@ -19,8 +19,9 @@ const RENDER_STATE_COLOR: i32 = 4;
 
 fn main() {
     let mut device = Device::init("owo", WIDTH, HEIGHT);
-    device.camera_at_zero(3., 0., 0.);
+
     device.init_texture();
+    device.camera_at_zero(3., 0., 0.);
     device.render_state = RENDER_STATE_TEXTURE;
     let mut a = 0;
     while device.window.is_open() && !device.window.is_key_down(Key::Escape) {

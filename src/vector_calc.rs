@@ -45,9 +45,12 @@ impl Vector4f {
     }
 
     pub fn crossproduct(&mut self, x: Vector4f, y: Vector4f) {
-        self.x = x.y * y.z - x.z * y.y;
-        self.y = x.z * y.x - x.x * y.z;
-        self.z = x.x * y.y - x.y * y.x;
+        let mut m1 = x.y * y.z - x.z * y.y;
+        let mut m2 = x.z * y.x - x.x * y.z;
+        let mut m3 = x.x * y.y - x.y * y.x;
+        self.x = m1;
+        self.y = m2;
+        self.z = m3;
         self.w = 1.0;
     }
 
@@ -78,6 +81,5 @@ impl Vector4f {
         self.y = X * m.m[0][1] + Y * m.m[1][1] + Z * m.m[2][1] + W * m.m[3][1];
         self.z = X * m.m[0][2] + Y * m.m[1][2] + Z * m.m[2][2] + W * m.m[3][2];
         self.w = X * m.m[0][3] + Y * m.m[1][3] + Z * m.m[2][3] + W * m.m[3][3];
-        //println!("{} {} {} {}", m.m[0][3], m.m[1][3], m.m[2][3], m.m[3][3])
     }
 }

@@ -2,7 +2,7 @@ use std::mem::swap;
 use libc::exit;
 use minifb::*;
 use crate::transform_calc::Transform;
-use crate::{HEIGHT, WIDTH};
+use crate::{calc, HEIGHT, WIDTH};
 use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init, trapezoid_init_scan_line, trapezoid_init_triangle};
 use crate::matrix_calc::Matrix4f;
 use crate::vector_calc::Vector4f;
@@ -140,7 +140,9 @@ impl Device {
     }
 
     pub fn pixel(&mut self, x: usize, y: usize, color: u32) {
-        self.framebuf[y * WIDTH + x] = color;
+        if y < WIDTH && x < HEIGHT {
+            self.framebuf[y * WIDTH + x] = color;
+        }
     }
 
 
@@ -148,7 +150,7 @@ impl Device {
         if x1 == x2 && y1 == y2 {
             self.pixel(x1, y1, color);
         } else if x1 == x2 {
-            let inc = match y1 < y2 {
+            let inc = match y1 <= y2 {
                 true => { 1 }
                 false => { -1 }
             };
@@ -219,6 +221,7 @@ impl Device {
                         };
                         self.pixel(x as usize, y as usize, color)
                     }
+                    y += 1;
                 }
                 self.pixel(x2, y2, color);
             }
@@ -279,7 +282,7 @@ impl Device {
         let bottom = (trap.bottom + 0.5) as i32;
         for j in top..bottom {
             if j >= 0 && j < HEIGHT as i32 {
-                trapezoid_edge_interp(trap, (j as f32 + 0.5) as f32);
+                trapezoid_edge_interp(trap, (j as f32 + 0.5));
                 let scanline = trapezoid_init_scan_line(*trap, j);
                 self.draw_scanline(scanline);
             }
@@ -289,13 +292,14 @@ impl Device {
         }
     }
 
-    pub fn draw_primitive(&mut self, v1: Vertex, v2: Vertex, v3: Vertex) {
+    pub fn draw_primitive(&mut self, v1: &mut Vertex, v2: &mut Vertex, v3: &mut Vertex) {
         let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
         let render_state = self.render_state;
         self.transform.apply(&mut c1, v1.pos);
         self.transform.apply(&mut c2, v2.pos);
@@ -312,23 +316,21 @@ impl Device {
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
-        if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 2 {
-            let mut t1 = v1;
-            let mut t2 = v2;
-            let mut t3 = v3;
+        if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) > 0 {
+
             let traps: &mut [Trapezoid; 2] = &mut [trapezoid_init(); 2];
-            t1.pos = p1;
-            t2.pos = p2;
-            t3.pos = p3;
-            t1.pos.w = c1.w;
-            t2.pos.w = c2.w;
-            t3.pos.w = c3.w;
+            v1.pos = p1.clone();
+            v2.pos = p2.clone();
+            v3.pos = p3.clone();
+            v1.pos.w = c1.w;
+            v2.pos.w = c2.w;
+            v3.pos.w = c3.w;
 
-            t1.rhw_init();
-            t2.rhw_init();
-            t3.rhw_init();
+            v1.rhw_init();
+            v2.rhw_init();
+            v3.rhw_init();
 
-            let n = trapezoid_init_triangle(traps, t1, t2, t3);
+            let n = trapezoid_init_triangle(traps, *v1, *v2, *v3);
             if n >= 1 {
                 self.render_trap(&mut traps[0]);
             }
@@ -336,8 +338,7 @@ impl Device {
                 self.render_trap(&mut traps[1]);
             }
         }
-        if render_state & RENDER_STATE_WIREFRAME == 1 {
-            println!("owo");
+        if render_state & RENDER_STATE_WIREFRAME > 0 {
             self.draw_line(p1.x as usize, p1.y as usize,
                            p2.x as usize, p2.y as usize, self.foreground);
             self.draw_line(p1.x as usize, p1.y as usize,
@@ -370,7 +371,9 @@ impl Device {
         let mut m = Matrix4f::new();
         m.set_rotation(-1., -0.5, 1., theta);
         self.transform.world = m;
+
         self.transform.update();
+
         self.draw_plane(0, 1, 2, 3);
         self.draw_plane(7, 6, 5, 4);
         self.draw_plane(0, 4, 5, 1);
@@ -399,6 +402,12 @@ impl Device {
             w: 1.,
         };
         self.transform.view.set_lookat(eye, at, up);
+        // for i in 0..4 {
+        //     for j in 0..4 {
+        //         print!("{} ", self.transform.view.m[i][j]);
+        //     }
+        //     println!();
+        // }
         self.transform.update();
     }
 
