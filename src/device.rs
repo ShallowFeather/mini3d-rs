@@ -56,7 +56,7 @@ impl Device {
                 width,
                 height,
                 WindowOptions {
-                    scale: minifb::Scale::X2,
+                    scale: minifb::Scale::X1,
                     ..WindowOptions::default()
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
@@ -124,16 +124,15 @@ impl Device {
     }
 
     pub fn clear(&mut self, mode: i32) {
-        let (width, height) = self.window.get_size();
-        let mut buf: Vec<u32>= vec![0; (width * height)];
-        for y in 0..height {
-            let mut cc: u32 = ((height - 1 - y) * 230 / (height - 1)) as u32;
+        let mut buf: Vec<u32>= vec![0; (WIDTH * HEIGHT)];
+        for y in 0..HEIGHT {
+            let mut cc = ((HEIGHT - 1 - y) * 230 / (HEIGHT - 1)) as u32;
             cc = (cc << 16) | (cc << 8) | cc;
             if mode == 0 {
                 cc = self.background;
             }
-            for x in 0..width {
-                buf[y * width + x] = cc;
+            for x in 0..WIDTH {
+                buf[y * WIDTH + x] = cc;
             }
         }
         self.framebuf = buf;
@@ -285,32 +284,38 @@ impl Device {
     }
 
     pub fn draw_primitive(&mut self, v1: Vertex, v2: Vertex, v3: Vertex) {
-        let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
-        let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
         let render_state = self.render_state;
-        self.transform.apply(&mut c1, v1.pos);
-        self.transform.apply(&mut c2, v2.pos);
-        self.transform.apply(&mut c3, v3.pos);
-
+        c1.matrix_apply(v1.pos, self.transform.transform);
+        c2.matrix_apply(v2.pos, self.transform.transform);
+        c3.matrix_apply(v3.pos, self.transform.transform);
+        // self.transform.apply(&mut c1, v1.pos);
+        // self.transform.apply(&mut c2, v2.pos);
+        // self.transform.apply(&mut c3, v3.pos);
+        //println!("{}", c1.x);
         if Transform::check_cvv(c1) != 0 {
             return;
         }
+        println!("owo");
         if Transform::check_cvv(c2) != 0 {
             return;
         }
+        println!("owo");
         if Transform::check_cvv(c3) != 0 {
             return;
         }
-
+        println!("owo");
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
 
         if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 1 {
+            //println!("owo");
             let mut t1 = v1;
             let mut t2 = v2;
             let mut t3 = v3;
@@ -334,37 +339,34 @@ impl Device {
                 self.render_trap(&mut traps[1]);
             }
         }
-
-        if render_state & RENDER_STATE_WIREFRAME == 1 {
+        //println!("{}", render_state);
+        if render_state & RENDER_STATE_WIREFRAME == 2 {
+            println!("owo");
             self.draw_line(p1.x as usize, p1.y as usize,
-                           p2.x as usize, p2.y as usize, self.foreground);
+                           p2.x as usize, p2.y as usize, 0xff0c0c);
             self.draw_line(p1.x as usize, p1.y as usize,
-                           p3.x as usize, p3.y as usize, self.foreground);
+                           p3.x as usize, p3.y as usize, 0xff0c0c);
             self.draw_line(p3.x as usize, p3.y as usize,
-                           p2.x as usize, p2.y as usize, self.foreground);
+                           p2.x as usize, p2.y as usize, 0xff0c0c);
         }
     }
 
-    pub fn draw_plane(&mut self, a: i32, b: i32, c: i32, d: i32) {
-        //let mut p1 = self.mesh[a as usize];
-        //let mut p2 = self.mesh[b as usize];
-        //let mut p3 = self.mesh[c as usize];
-        //let mut p4 = self.mesh[d as usize];
-        self.mesh[a as usize].tc.u = 0 as f32;
-        self.mesh[a as usize].tc.v = 0 as f32;
-        self.mesh[b as usize].tc.u = 0 as f32;
-        self.mesh[b as usize].tc.v = 1 as f32;
-        self.mesh[c as usize].tc.u = 1 as f32;
-        self.mesh[c as usize].tc.v = 1 as f32;
-        self.mesh[d as usize].tc.u = 1 as f32;
-        self.mesh[d as usize].tc.v = 0 as f32;
-        self.draw_primitive(self.mesh[a as usize],
-                            self.mesh[b as usize],
-                            self.mesh[c as usize],
+    pub fn draw_plane(&mut self, a: usize, b: usize, c: usize, d: usize) {
+        let mut p1 = self.mesh[a as usize];
+        let mut p2 = self.mesh[b as usize];
+        let mut p3 = self.mesh[c as usize];
+        let mut p4 = self.mesh[d as usize];
+        p1.tc.u = 0.; p1.tc.v = 0.;
+        p2.tc.u = 0.; p2.tc.v = 1.;
+        p3.tc.u = 1.; p3.tc.v = 1.;
+        p4.tc.u = 1.; p4.tc.v = 0.;
+        self.draw_primitive(p1,
+                            p2,
+                            p3,
         );
-        self.draw_primitive(self.mesh[c as usize],
-                            self.mesh[d as usize],
-                            self.mesh[a as usize],
+        self.draw_primitive(p3,
+                            p4,
+                            p1,
         );
     }
 
@@ -409,7 +411,7 @@ impl Device {
             for i in 0..256 {
                 let x = i / 32;
                 let y = j / 32;
-                self.texture[j * 256 + y] = match ((x + y) & 1) {
+                self.texture[j * 256 + y] = match (x + y) & 1 {
                     1 => { 0xffffff }
                     _ => { 0x3fbcef }
                 };
