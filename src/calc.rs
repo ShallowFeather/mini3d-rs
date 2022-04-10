@@ -210,7 +210,42 @@ pub fn trapezoid_edge_interp(trap: &mut Trapezoid, y: f32) {
     trap.right.v.interp(trap.right.v1.clone(), trap.right.v2.clone(), t2);
 }
 
-pub fn trapezoid_init_scan_line(trap: Trapezoid, scanline: &mut Scanline, y: i32) {
+pub fn trapezoid_init_scan_line(trap: Trapezoid, y: i32) -> Scanline {
+    let mut scanline: Scanline = Scanline {
+        v: Vertex {
+            pos: Vector4f {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 0.0
+            },
+            tc: Texcoord { u: 0.0, v: 0.0 },
+            color: Color {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0
+            },
+            rhw: 0.0
+        },
+        step: Vertex {
+            pos: Vector4f {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+                w: 0.0
+            },
+            tc: Texcoord { u: 0.0, v: 0.0 },
+            color: Color {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0
+            },
+            rhw: 0.0
+        },
+        x: 0,
+        y,
+        w: 0
+    };
     let width = trap.right.v.pos.x - trap.left.v.pos.x;
     scanline.x = (trap.left.v.pos.x + 0.5) as i32;
     scanline.w = (trap.right.v.pos.x + 0.5) as i32 - scanline.x;
@@ -219,7 +254,8 @@ pub fn trapezoid_init_scan_line(trap: Trapezoid, scanline: &mut Scanline, y: i32
     if trap.left.v.pos.x >= trap.right.v.pos.x {
         scanline.w = 0;
     }
-    scanline.step.division(trap.left.v, trap.right.v, width)
+    scanline.step.division(trap.left.v, trap.right.v, width);
+    return scanline;
 }
 
 pub fn map(val: f64, start1: f64, end1: f64, start2: f64, end2: f64) -> f64 {

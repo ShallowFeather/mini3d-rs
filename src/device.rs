@@ -3,7 +3,7 @@ use libc::exit;
 use minifb::*;
 use crate::transform_calc::Transform;
 use crate::{HEIGHT, WIDTH};
-use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init, trapezoid_init_triangle};
+use crate::calc::{CMID, Color, Scanline, Texcoord, Trapezoid, trapezoid_edge_interp, trapezoid_init, trapezoid_init_scan_line, trapezoid_init_triangle};
 use crate::matrix_calc::Matrix4f;
 use crate::vector_calc::Vector4f;
 use crate::vertex::{Edge, Vertex};
@@ -12,7 +12,7 @@ pub struct Device {
     pub transform: Transform,
     pub window: minifb::Window, // get_size = (width, height)
     pub framebuf: Vec<u32>,
-    pub texture: Vec<u32>,
+    pub texture: Vec<Vec<u32>>,
     pub zbuffer: Vec<Vec<u32>>,
     pub tex_width: i32,
     pub tex_height: i32,
@@ -61,7 +61,7 @@ impl Device {
                     ..WindowOptions::default()
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
-            texture: vec![0; width * height],
+            texture: vec![vec![0, 256]; 256],
             zbuffer: vec![vec![0; height]; width],
             tex_width: 2,
             tex_height: 2,
@@ -234,40 +234,43 @@ impl Device {
         y = (v + 0.5) as i32;
         x = CMID(x, 0, self.tex_width - 1);
         y = CMID(y, 0, self.tex_height - 1);
-        return self.texture[(y * self.tex_width + x) as usize];
+        return self.texture[y as usize][x as usize];
     }
     //渲染部分
     pub fn draw_scanline(&mut self, mut scanline: Scanline) {
-        let x = scanline.x;
-        let w = scanline.w;
-        for w in w..0 {
+        let mut x = scanline.x;
+
+        let render_state = self.render_state;
+        let y = scanline.y as usize;
+        let mut w = scanline.w;
+        while w > 0 && x < WIDTH as i32 {
             if x >= 0 && x < WIDTH as i32 {
                 let rhw = scanline.v.rhw;
-                if rhw >= self.zbuffer[scanline.y as usize][x as usize] as f32 {
-                    let w = 1.0 / rhw;
-                    self.zbuffer[scanline.y as usize][x as usize] = rhw as u32;
-                    if self.render_state & RENDER_STATE_COLOR == 1 {
-                        let mut rgb = RGB {
-                            R: scanline.v.color.r as u32,
-                            G: scanline.v.color.g as u32,
-                            B: scanline.v.color.b as u32,
-                        };
-                        rgb.R = CMID(rgb.R as i32, 0, 255) as u32;
-                        rgb.G = CMID(rgb.G as i32, 0, 255) as u32;
-                        rgb.B = CMID(rgb.B as i32, 0, 255) as u32;
-                        self.framebuf[(scanline.y as usize * WIDTH + x as usize) as usize] = rgb_to_hex(rgb);
+                let w = 1. / rhw;
+                if rhw >= self.zbuffer[y as usize][x as usize] as f32 {
+                    self.zbuffer[y as usize][x as usize] = rhw as u32;
+                    if render_state & RENDER_STATE_COLOR > 0 {
+                        let R = scanline.v.color.r * w as f32;
+                        let G = scanline.v.color.g * w as f32;
+                        let B = scanline.v.color.b * w as f32;
+                        let mut r = (R * 255. as f32) as i32;
+                        let mut g = (G * 255. as f32) as i32;
+                        let mut b = (B * 255. as f32) as i32;
+                        r = CMID(r, 0, 255);
+                        g= CMID(g, 0, 255);
+                        b = CMID(b, 0, 255);
+                        self.framebuf[y * WIDTH + x as usize] = ((r << 16) | (g << 8) | (b)) as u32;
                     }
-                    if self.render_state & RENDER_STATE_TEXTURE == 1 {
-                        let u = scanline.v.tc.u * w;
-                        let v = scanline.v.tc.v * w;
-                        self.framebuf[(scanline.y as usize * WIDTH + x as usize) as usize] = self.texture_read(u, v);
+                    if render_state & RENDER_STATE_TEXTURE > 0 {
+                        let u = scanline.v.tc.u * w as f32;
+                        let v = scanline.v.tc.v * w as f32;
+                        self.framebuf[y * WIDTH + x as usize] = self.texture_read(u, v);
                     }
                 }
             }
-            scanline.v.add(scanline.step.clone());
-            if x >= WIDTH as i32 {
-                break;
-            }
+            scanline.v.add(scanline.step);
+            w -= 1;
+            x += 1;
         }
     }
 
@@ -278,6 +281,8 @@ impl Device {
         for j in top..bottom {
             if j >= 0 && j < HEIGHT as i32 {
                 trapezoid_edge_interp(trap, (j as f32 + 0.5) as f32);
+                let scanline = trapezoid_init_scan_line(*trap, j);
+                self.draw_scanline(scanline);
             }
             if j >= HEIGHT as i32 {
                 break;
@@ -308,7 +313,7 @@ impl Device {
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
-        if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 1 {
+        if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) == 2 {
             let mut t1 = v1;
             let mut t2 = v2;
             let mut t3 = v3;
@@ -335,11 +340,11 @@ impl Device {
         if render_state & RENDER_STATE_WIREFRAME == 1 {
             println!("owo");
             self.draw_line(p1.x as usize, p1.y as usize,
-                           p2.x as usize, p2.y as usize, 0xff0c0c);
+                           p2.x as usize, p2.y as usize, self.foreground);
             self.draw_line(p1.x as usize, p1.y as usize,
-                           p3.x as usize, p3.y as usize, 0xff0c0c);
+                           p3.x as usize, p3.y as usize, self.foreground);
             self.draw_line(p3.x as usize, p3.y as usize,
-                           p2.x as usize, p2.y as usize, 0xff0c0c);
+                           p2.x as usize, p2.y as usize, self.foreground);
         }
     }
 
@@ -403,12 +408,12 @@ impl Device {
             for i in 0..256 {
                 let x = i / 32;
                 let y = j / 32;
-                self.texture[j * 256 + y] = match (x + y) & 1 {
-                    1 => { 0xffffff }
-                    _ => { 0x3fbcef }
+                self.texture[j][i] = match (x + y) & 1 > 0 {
+                    true => { 0xffffff }
+                    false => { 0x3fbcef }
                 };
             }
         }
-        self.set_texture(256 * 4, 256 * 4);
+        self.set_texture(256, 256);
     }
 }
