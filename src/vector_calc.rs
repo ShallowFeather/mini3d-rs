@@ -76,10 +76,10 @@ impl Vector4f {
         let Y = x.y;
         let Z = x.z;
         let W = x.w;
-
         self.x = X * m.m[0][0] + Y * m.m[1][0] + Z * m.m[2][0] + W * m.m[3][0];
         self.y = X * m.m[0][1] + Y * m.m[1][1] + Z * m.m[2][1] + W * m.m[3][1];
         self.z = X * m.m[0][2] + Y * m.m[1][2] + Z * m.m[2][2] + W * m.m[3][2];
         self.w = X * m.m[0][3] + Y * m.m[1][3] + Z * m.m[2][3] + W * m.m[3][3];
+        //println!("{} {} {} {}", self.x, self.y, self.z, self.w);
     }
 }

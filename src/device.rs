@@ -246,8 +246,8 @@ impl Device {
         let mut w = scanline.w;
 
         let render_state = self.render_state;
-        while w > 0 && x < HEIGHT as i32 {
-            if x >= 0 {
+        while w > 0 {
+            if x >= 0 && x < HEIGHT as i32 {
                 let rhw = scanline.v.rhw;
                 let w1 = 1. / rhw;
 
@@ -273,6 +273,9 @@ impl Device {
                 }
             }
             scanline.v.add(scanline.step);
+            if x >= HEIGHT as i32 {
+                break;
+            }
             w -= 1;
             x += 1;
         }
@@ -295,25 +298,26 @@ impl Device {
         };
         let top = (trap.top + 0.5) as i32;
         let bottom = (trap.bottom + 0.5) as i32;
+        //println!("{} {}", top, bottom);
         for j in top..bottom {
-            if j >= 0 && j < WIDTH as i32 {
+            if j >= 0 && j < HEIGHT as i32 {
                 trapezoid_edge_interp(trap, (j as f32 + 0.5));
                 trapezoid_init_scan_line(trap, &mut scanline, j);
                 self.draw_scanline(scanline);
             }
-            if j >= WIDTH as i32 {
+            if j >= HEIGHT as i32 {
                 break;
             }
         }
     }
 
     pub fn draw_primitive(&mut self, v1: &mut Vertex, v2: &mut Vertex, v3: &mut Vertex) {
-        let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-        let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-        let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-        let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-        let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-        let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+        let mut p1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut p2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut p3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c1: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c2: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+        let mut c3: Vector4f = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
 
         let render_state = self.render_state;
         self.transform.apply(&mut c1, v1.pos);
@@ -331,6 +335,7 @@ impl Device {
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
+
         if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) > 0 {
 
             let traps: &mut [Trapezoid; 2] = &mut [trapezoid_init(); 2];
@@ -344,12 +349,15 @@ impl Device {
             v1.rhw_init();
             v2.rhw_init();
             v3.rhw_init();
-
-            let n = trapezoid_init_triangle(traps, *v1, *v2, *v3);
+            let mut n = 0;
+            unsafe {
+                n = trapezoid_init_triangle(traps, v1, v2, v3);
+            }
             if n >= 1 {
                 self.render_trap(&mut traps[0]);
             }
             if n >= 2 {
+                //println!("{} {}", traps[1].bottom, traps[1].top);
                 self.render_trap(&mut traps[1]);
             }
         }
@@ -417,12 +425,6 @@ impl Device {
             w: 1.,
         };
         self.transform.view.set_lookat(eye, at, up);
-        // for i in 0..4 {
-        //     for j in 0..4 {
-        //         print!("{} ", self.transform.view.m[i][j]);
-        //     }
-        //     println!();
-        // }
         self.transform.update();
     }
 

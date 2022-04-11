@@ -33,7 +33,7 @@ fn main() {
 
     while device.window.is_open() && !device.window.is_key_down(Key::Escape) {
         device.clear(1);
-        device.camera_at_zero(pos, 0., -1.);
+        device.camera_at_zero(pos, 0., 0.);
         if device.window.is_key_down(Key::Up) {
             pos -= 0.01;
         }

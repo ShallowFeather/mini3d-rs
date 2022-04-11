@@ -98,37 +98,43 @@ pub fn trapezoid_init() -> Trapezoid {
     }
 }
 
-pub fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: Vertex,
-                               mut p2: Vertex, mut p3: Vertex) -> i32 {
+pub unsafe fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: *mut Vertex,
+                               mut p2: *mut Vertex, mut p3: *mut Vertex) -> i32 {
     let mut k = 0.0;
     let mut x = 0.0;
-
-    if p1.pos.y < p2.pos.y {
-        (p1, p2) = swap(p1, p2);
+    let mut p: *mut Vertex;
+    if (*p1).pos.y < (*p2).pos.y {
+        p = p1;
+        p1 = p2;
+        p2 = p;
     }
-    if p1.pos.y > p3.pos.y {
-        (p1, p3) = swap(p1, p3);
+    if (*p1).pos.y > (*p3).pos.y {
+        p = p1;
+        p1 = p3;
+        p3 = p;
     }
-    if p2.pos.y < p3.pos.y {
-        (p2, p3) = swap(p2, p3);
+    if (*p2).pos.y < (*p3).pos.y {
+        p = p2;
+        p2 = p3;
+        p3 = p;
     }
-    if p1.pos.y == p2.pos.y && p1.pos.y == p3.pos.y {
+    if (*p1).pos.y == (*p2).pos.y && (*p1).pos.y == (*p3).pos.y {
         return 0;
     }
-    if p1.pos.x == p2.pos.x && p1.pos.x == p3.pos.x {
+    if (*p1).pos.x == (*p2).pos.x && (*p1).pos.x == (*p3).pos.x {
         return 0;
     }
 
-    if p1.pos.y == p2.pos.y {
-        if p1.pos.x > p2.pos.x {
+    if (*p1).pos.y == (*p2).pos.y {
+        if (*p1).pos.x > (*p2).pos.x {
             (p1, p2) = swap(p1, p2);
         }
-        trap[0].top = p1.pos.y;
-        trap[0].bottom = p3.pos.y;
-        trap[0].left.v1 = p1;
-        trap[0].left.v2 = p3;
-        trap[0].right.v1 = p2;
-        trap[0].right.v2 = p3;
+        trap[0].top = (*p1).pos.y;
+        trap[0].bottom = (*p3).pos.y;
+        trap[0].left.v1 = *p1;
+        trap[0].left.v2 = *p3;
+        trap[0].right.v1 = *p2;
+        trap[0].right.v2 = *p3;
         if trap[0].top < trap[0].bottom {
             return 1;
         }
@@ -137,16 +143,17 @@ pub fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: Vertex,
         }
     }
 
-    if p2.pos.y == p3.pos.y {
-        if p2.pos.x > p3.pos.x {
+    if (*p2).pos.y == (*p3).pos.y {
+        if (*p2).pos.x > (*p3).pos.x {
             (p2, p3) = swap(p2, p3);
         }
-        trap[0].top = p1.pos.y;
-        trap[0].bottom = p3.pos.y;
-        trap[0].left.v1 = p1;
-        trap[0].left.v2 = p2;
-        trap[0].right.v1 = p1;
-        trap[0].right.v2 = p3;
+        trap[0].top = (*p1).pos.y;
+        trap[0].bottom = (*p3).pos.y;
+        trap[0].left.v1 = *p1;
+        trap[0].left.v2 = *p2;
+        trap[0].right.v1 = *p1;
+        trap[0].right.v2 = *p3;
+
         if trap[0].top < trap[0].bottom {
             return 1;
         }
@@ -155,33 +162,33 @@ pub fn trapezoid_init_triangle(trap: &mut [Trapezoid; 2], mut p1: Vertex,
         }
     }
 
-    trap[0].top = p1.pos.y;
-    trap[0].bottom = p2.pos.y;
-    trap[1].top = p2.pos.y;
-    trap[1].bottom = p3.pos.y;
+    trap[0].top = (*p1).pos.y;
+    trap[0].bottom = (*p2).pos.y;
+    trap[1].top = (*p2).pos.y;
+    trap[1].bottom = (*p3).pos.y;
 
-    k = (p3.pos.y - p1.pos.y) / (p2.pos.y - p1.pos.y);
-    x = p1.pos.x + (p2.pos.x - p1.pos.x) * k;
+    k = ((*p3).pos.y - (*p1).pos.y) / ((*p2).pos.y - (*p1).pos.y);
+    x = (*p1).pos.x + ((*p2).pos.x - (*p1).pos.x) * k;
 
-    if x <= p3.pos.x {
-        trap[0].left.v1 = p1;
-        trap[0].left.v2 = p2;
-        trap[0].right.v1 = p1;
-        trap[0].right.v2 = p3;
-        trap[1].left.v1 = p2;
-        trap[1].left.v2 = p3;
-        trap[1].right.v1 = p1;
-        trap[1].right.v2 = p3;
+    if x <= (*p3).pos.x {
+        trap[0].left.v1 = *p1;
+        trap[0].left.v2 = *p2;
+        trap[0].right.v1 = *p1;
+        trap[0].right.v2 = *p3;
+        trap[1].left.v1 = *p2;
+        trap[1].left.v2 = *p3;
+        trap[1].right.v1 = *p1;
+        trap[1].right.v2 = *p3;
     }
     else {
-        trap[0].left.v1 = p1;
-        trap[0].left.v2 = p3;
-        trap[0].right.v1 = p1;
-        trap[0].right.v2 = p2;
-        trap[1].left.v1 = p1;
-        trap[1].left.v2 = p3;
-        trap[1].right.v1 = p1;
-        trap[1].right.v2 = p3;
+        trap[0].left.v1 = *p1;
+        trap[0].left.v2 = *p3;
+        trap[0].right.v1 = *p1;
+        trap[0].right.v2 = *p2;
+        trap[1].left.v1 = *p1;
+        trap[1].left.v2 = *p3;
+        trap[1].right.v1 = *p1;
+        trap[1].right.v2 = *p3;
     }
     return 2;
 }
@@ -200,7 +207,7 @@ pub fn trapezoid_init_scan_line(trap: &mut Trapezoid, scanline: &mut Scanline, y
     scanline.x = (trap.left.v.pos.x + 0.5) as i32;
     scanline.w = (trap.right.v.pos.x + 0.5) as i32 - scanline.x;
     scanline.y = y;
-    scanline.v = trap.left.v.clone();
+    scanline.v = trap.left.v;
     if trap.left.v.pos.x >= trap.right.v.pos.x {
         scanline.w = 0;
     }
