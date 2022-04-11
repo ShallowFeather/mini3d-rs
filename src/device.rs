@@ -13,7 +13,7 @@ pub struct Device {
     pub window: minifb::Window, // get_size = (width, height)
     pub framebuf: Vec<u32>,
     pub texture: Vec<Vec<u32>>,
-    pub zbuffer: Vec<Vec<u32>>,
+    pub zbuffer: Vec<Vec<f32>>,
     pub tex_width: i32,
     pub tex_height: i32,
     pub max_u: f32,
@@ -62,7 +62,7 @@ impl Device {
                 },).unwrap(),
             framebuf: vec![0b00000000_00000000_00000000_00000000; width * height],
             texture: vec![vec![0; 256]; 256],
-            zbuffer: vec![vec![0; height]; width],
+            zbuffer: vec![vec![0.; height]; width],
             tex_width: 2,
             tex_height: 2,
             max_u: 1.0,
@@ -242,19 +242,21 @@ impl Device {
     //渲染部分
     pub fn draw_scanline(&mut self, mut scanline: Scanline) {
         let mut x = scanline.x;
-        let render_state = self.render_state;
         let y = scanline.y as usize;
         let mut w = scanline.w;
-        while w > 0 && x < WIDTH as i32 {
-            if x >= 0 && x < HEIGHT as i32 {
+
+        let render_state = self.render_state;
+        while w > 0 && x < HEIGHT as i32 {
+            if x >= 0 {
                 let rhw = scanline.v.rhw;
-                let w = 1. / rhw;
+                let w1 = 1. / rhw;
+
                 if rhw >= self.zbuffer[y as usize][x as usize] as f32 {
-                    self.zbuffer[y as usize][x as usize] = rhw as u32;
+                    self.zbuffer[y as usize][x as usize] = rhw;
                     if render_state & RENDER_STATE_COLOR > 0 {
-                        let R = scanline.v.color.r * w as f32;
-                        let G = scanline.v.color.g * w as f32;
-                        let B = scanline.v.color.b * w as f32;
+                        let R = scanline.v.color.r * w1;
+                        let G = scanline.v.color.g * w1;
+                        let B = scanline.v.color.b * w1;
                         let mut r = (R * 255. as f32) as i32;
                         let mut g = (G * 255. as f32) as i32;
                         let mut b = (B * 255. as f32) as i32;
@@ -264,8 +266,8 @@ impl Device {
                         self.framebuf[y * WIDTH + x as usize] = ((r << 16) | (g << 8) | (b)) as u32;
                     }
                     if render_state & RENDER_STATE_TEXTURE > 0 {
-                        let u = scanline.v.tc.u * w as f32;
-                        let v = scanline.v.tc.v * w as f32;
+                        let u = scanline.v.tc.u * w1;
+                        let v = scanline.v.tc.v * w1;
                         self.framebuf[y * WIDTH + x as usize] = self.texture_read(u, v);
                     }
                 }
@@ -277,16 +279,29 @@ impl Device {
     }
 
     pub fn render_trap(&mut self, trap: &mut Trapezoid) {
-        let mut scanline: Scanline;
+        let mut scanline = Scanline {
+            v: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            },
+            step: Vertex {
+                pos: Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 },
+                tc: Texcoord { u: 0.0, v: 0.0 },
+                color: Color { r: 0.0, g: 0.0, b: 0.0 },
+                rhw: 0.0
+            }, x: 0, y: 0, w: 0
+        };
         let top = (trap.top + 0.5) as i32;
         let bottom = (trap.bottom + 0.5) as i32;
         for j in top..bottom {
-            if j >= 0 && j < HEIGHT as i32 {
+            if j >= 0 && j < WIDTH as i32 {
                 trapezoid_edge_interp(trap, (j as f32 + 0.5));
-                let scanline = trapezoid_init_scan_line(*trap, j);
+                trapezoid_init_scan_line(trap, &mut scanline, j);
                 self.draw_scanline(scanline);
             }
-            if j >= HEIGHT as i32 {
+            if j >= WIDTH as i32 {
                 break;
             }
         }
