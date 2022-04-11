@@ -357,13 +357,13 @@ impl Device {
         p2.tc.u = 0.; p2.tc.v = 1.;
         p3.tc.u = 1.; p3.tc.v = 1.;
         p4.tc.u = 1.; p4.tc.v = 0.;
-        self.draw_primitive(p1,
-                            p2,
-                            p3,
+        self.draw_primitive(&mut p1,
+                            &mut p2,
+                            &mut p3,
         );
-        self.draw_primitive(p3,
-                            p4,
-                            p1,
+        self.draw_primitive(&mut p3,
+                            &mut p4,
+                            &mut p1,
         );
     }
 
