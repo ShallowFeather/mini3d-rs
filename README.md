@@ -5,7 +5,7 @@ The project only use MiniFb to build screen and draw pixel.
 
 ![](https://github.com/ShallowFeather/mini3d-rs/blob/master/image/A.png)
 ![](https://github.com/ShallowFeather/mini3d-rs/blob/master/image/B.png)
-![](https://github.com/ShallowFeather/mini3d-rs/blob/master/image/C.png)
+![](https://github.com/ShallowFeather/mini3d-rs/blob/master/image/c.png)
 
 ## TODO
 - Add Light
