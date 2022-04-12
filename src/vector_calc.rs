@@ -37,7 +37,7 @@ impl Vector4f {
         self.x = x.x - y.x;
         self.y = x.y - y.y;
         self.z = x.z - y.z;
-        self.z = 1.0;
+        self.w = 1.0;
     }
 
     pub fn dotproduct(&self, y: Vector4f) -> f32 {

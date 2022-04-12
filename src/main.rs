@@ -4,6 +4,7 @@ mod transform_calc;
 mod calc;
 mod matrix_calc;
 mod vertex;
+mod screen;
 
 use std::thread::sleep;
 use std::time::Duration;
@@ -35,16 +36,16 @@ fn main() {
         device.clear(1);
         device.camera_at_zero(pos, 0., 0.);
         if device.window.is_key_down(Key::Up) {
-            pos -= 0.01;
+            pos -= 0.1;
         }
         if device.window.is_key_down(Key::Down) {
-            pos += 0.01;
+            pos += 0.1;
         }
         if device.window.is_key_down(Key::Left) {
-            alpha += 0.01;
+            alpha += 0.1;
         }
         if device.window.is_key_down(Key::Right) {
-            alpha -= 0.01;
+            alpha -= 0.1;
         }
 
         if device.window.is_key_down(Key::Space) {

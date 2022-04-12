@@ -1,5 +1,5 @@
+use std::borrow::BorrowMut;
 use std::mem::swap;
-use libc::exit;
 use minifb::*;
 use crate::transform_calc::Transform;
 use crate::{calc, HEIGHT, WIDTH};
@@ -113,7 +113,6 @@ impl Device {
                 },
             ]
         };
-        device.window.limit_update_rate(Some(std::time::Duration::from_micros(16600)));
         return device;
     }
 
@@ -134,6 +133,11 @@ impl Device {
             }
             for x in 0..WIDTH {
                 buf[y * WIDTH + x] = cc;
+            }
+        }
+        for x in 0..WIDTH {
+            for y in 0..HEIGHT {
+                self.zbuffer[x][y] = 0.;
             }
         }
         self.framebuf = buf;
@@ -335,29 +339,29 @@ impl Device {
         self.transform.homogenize(&mut p1, c1);
         self.transform.homogenize(&mut p2, c2);
         self.transform.homogenize(&mut p3, c3);
-
         if (render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) > 0 {
-
+            let mut t1 = *v1;
+            let mut t2 = *v2;
+            let mut t3 = *v3;
             let traps: &mut [Trapezoid; 2] = &mut [trapezoid_init(); 2];
-            v1.pos = p1.clone();
-            v2.pos = p2.clone();
-            v3.pos = p3.clone();
-            v1.pos.w = c1.w;
-            v2.pos.w = c2.w;
-            v3.pos.w = c3.w;
-
-            v1.rhw_init();
-            v2.rhw_init();
-            v3.rhw_init();
+            t1.pos = p1.clone();
+            t2.pos = p2.clone();
+            t3.pos = p3.clone();
+            t1.pos.w = c1.w;
+            t2.pos.w = c2.w;
+            t3.pos.w = c3.w;
+            //println!("{} {} {} {}", v1.pos.x, v1.pos.y, v1.pos.z, v1.pos.w);
+            t1.rhw_init();
+            t2.rhw_init();
+            t3.rhw_init();
             let mut n = 0;
             unsafe {
-                n = trapezoid_init_triangle(traps, v1, v2, v3);
+                n = trapezoid_init_triangle(traps, t1, t2, t3);
             }
             if n >= 1 {
                 self.render_trap(&mut traps[0]);
             }
             if n >= 2 {
-                //println!("{} {}", traps[1].bottom, traps[1].top);
                 self.render_trap(&mut traps[1]);
             }
         }

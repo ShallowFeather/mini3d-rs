@@ -7,17 +7,28 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="move finish but texture still wrong.">
+    <list default="true" id="636c8e4e-c461-434e-93a9-ff06d5e9990d" name="变更" comment="change trap init triangle but texture still wrong">
+      <change afterPath="$PROJECT_DIR$/src/screen.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/calc.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/device.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/device.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/matrix_calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/matrix_calc.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/vector_calc.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/vector_calc.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Rust File" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -63,6 +74,19 @@
       <command value="y:" />
     </option>
   </component>
+  <component name="RunManager">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
   <component name="RustProjectSettings">
     <option name="toolchainHomeDirectory" value="$USER_HOME$/.cargo/bin" />
     <option name="version" value="2" />
@@ -77,7 +101,9 @@
       <updated>1649384758979</updated>
       <workItem from="1649384760821" duration="5562000" />
       <workItem from="1649395657526" duration="1701000" />
-      <workItem from="1649649412108" duration="13644000" />
+      <workItem from="1649649412108" duration="15490000" />
+      <workItem from="1649716678325" duration="1013000" />
+      <workItem from="1649737939390" duration="5975000" />
     </task>
     <task id="LOCAL-00001" summary="Testing minifb">
       <created>1649435956732</created>
@@ -149,7 +175,14 @@
       <option name="project" value="LOCAL" />
       <updated>1649662393149</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="change trap init triangle but texture still wrong">
+      <created>1649670513770</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1649670513770</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -178,6 +211,7 @@
     <MESSAGE value="finilly has some image but still strange" />
     <MESSAGE value="texture has some bug" />
     <MESSAGE value="move finish but texture still wrong." />
-    <option name="LAST_COMMIT_MESSAGE" value="move finish but texture still wrong." />
+    <MESSAGE value="change trap init triangle but texture still wrong" />
+    <option name="LAST_COMMIT_MESSAGE" value="change trap init triangle but texture still wrong" />
   </component>
 </project>

@@ -123,8 +123,11 @@ impl Matrix4f {
         let mut zaxis = Vector4f { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
 
         zaxis.sub(at, eye);
+
         zaxis.normalize();
+
         xaxis.crossproduct(up, zaxis);
+        //println!("{} {} {} {}", xaxis.x, xaxis.y, xaxis.z, xaxis.w);
         xaxis.normalize();
         yaxis.crossproduct(zaxis, xaxis);
 

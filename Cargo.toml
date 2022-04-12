@@ -6,5 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-libc = "0.2"
 minifb = "0.22.0"
+
+[dependencies.windows]
+version = "0.35.0"
+features = [
+    "alloc",
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_WindowsAndMessaging",
+]
